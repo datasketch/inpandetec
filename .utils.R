@@ -5,6 +5,8 @@ usethis::use_data_raw()
 usethis::use_test("data_filter")
 # add test to var select
 usethis::use_test("var_selection")
+# add test to var_aggregation
+usethis::use_test("var_aggregation")
 
 # build
 devtools::load_all()
