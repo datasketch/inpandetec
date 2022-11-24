@@ -1,6 +1,5 @@
 #' @export
 data_filter <- function(data, var_inputs) {
-
   if (is.null(data)) return()
   df <- data
   if (is.null(var_inputs)) return()
