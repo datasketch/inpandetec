@@ -151,13 +151,35 @@ server <-
 
     # Seleccionar datos ------------------------------------------
 
-
-
-    output$aver <- renderPrint({
-      d_filter()
+    d_viz <- reactive({
+      req(reactiveValuesToList(input))
+      req(actual_but$active)
+      req(d_filter())
+      df <- d_filter()
+      v <- NULL
+      if (actual_but$active == "map") {
+        v <- c("País")
+      } else {
+        v <- "Frecuencia"
+        if (!is.null(input$freqId)) {
+          if (length(unique(input$freqId)) > 1) {
+            if (length(unique(input$typeId)) > 1) v <- c(v, "Tipo de violencia experimentada")
+          } else {
+            v <- "Tipo de violencia experimentada"
+            if (length(unique(input$typeId)) == 1) v <- "País"  #comparacion por pais
+            if (length(unique(input$countryId)) == 1 & length(unique(input$typeId)) == 1) v <- "Identidad de género"  #comparacion por pais
+          }
+        }
+      }
+      inpandetec::var_selection(df, v) |>
+        inpandetec::var_aggregation(Total = dplyr::n())
     })
 
-}
+    output$aver <- renderPrint({
+      d_viz()
+    })
+
+  }
 
 
 shinyApp(ui, server)
