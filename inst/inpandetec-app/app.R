@@ -43,6 +43,7 @@ server <-
   function(input, output, session) {
 
 
+    # Renderizar graficos ------------------------------------------
 
     actual_but <- reactiveValues(active = NULL)
 
@@ -74,6 +75,7 @@ server <-
       )
     })
 
+    # opciones para parmesan ------------------------------------------
 
     pickerOpts <- reactive({
       list(
@@ -136,6 +138,7 @@ server <-
                     env = environment())
 
 
+    # Filtrar datos ------------------------------------------
 
 
     d_filter <- reactive({
@@ -146,6 +149,7 @@ server <-
     })
 
 
+    # Seleccionar datos ------------------------------------------
 
 
 
