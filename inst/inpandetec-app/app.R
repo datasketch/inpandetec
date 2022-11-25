@@ -20,7 +20,7 @@ ui <-
                              div(class = "head-viz",
                                  div(style = "display:flex;gap:20px;margin-bottom: 20px;align-items: flex-end;",
                                      "VISUALIZACIÓN",
-                                     "viz"),
+                                     uiOutput("viz_icons")),
                                  "descarga"),
                              div(class = "viz-nucleo",
                                  verbatimTextOutput("aver")
@@ -41,6 +41,39 @@ ui <-
 
 server <-
   function(input, output, session) {
+
+
+
+    actual_but <- reactiveValues(active = NULL)
+
+    observe({
+      if (is.null(input$viz_selection)) return()
+      viz_rec <- c("map", "bar", "treemap", "pie")
+      if (input$viz_selection %in% viz_rec) {
+        actual_but$active <- input$viz_selection
+      } else {
+        actual_but$active <- viz_rec[1]
+      }
+    })
+
+    # print viz
+    output$viz_icons <- renderUI({
+      possible_viz <- c("map", "bar", "treemap", "pie")
+
+      suppressWarnings(
+        shinyinvoer::buttonImageInput("viz_selection",
+                                      " ",
+                                      images = possible_viz,
+                                      tooltips = c("Mapa", "Barras", "Treemap", "Torta"),
+                                      path = "img/viz_icons/",
+                                      active = actual_but$active,
+                                      imageStyle = list(shadow = TRUE,
+                                                        borderColor = "#ffffff",
+                                                        padding = "3px")
+        )
+      )
+    })
+
 
     pickerOpts <- reactive({
       list(
@@ -103,12 +136,17 @@ server <-
                     env = environment())
 
 
+
+
     d_filter <- reactive({
       req(reactiveValuesToList(input))
       ls <- reactiveValuesToList(input)[c("typeId", "freqId", "countryId", "generoId", "orienId", "ageId")]
       names(ls) <- c("Tipo de violencia experimentada", "Frecuencia", "País", "Identidad de género", "Orientación sexual", "Edad")
       inpandetec::data_filter(data_to_app, ls)
     })
+
+
+
 
 
     output$aver <- renderPrint({

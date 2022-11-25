@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="53" height="53" viewBox="0 0 53 53">
+  <g id="Grupo_3894" data-name="Grupo 3894" transform="translate(-1126.984 -1387.984)">
+    <circle id="Elipse_15" data-name="Elipse 15" cx="26.5" cy="26.5" r="26.5" transform="translate(1126.984 1387.984)" fill="#80cac7"/>
+    <g id="Grupo_1530" data-name="Grupo 1530" transform="translate(1132.539 1393.515)">
+      <path id="Icon_ionic-ios-arrow-round-forward" data-name="Icon ionic-ios-arrow-round-forward" d="M14.987.418a1.486,1.486,0,0,0-.011,2.092l6.913,6.925L1.467,9.425a1.478,1.478,0,0,0,0,2.956l20.411.01-6.913,6.925a1.5,1.5,0,0,0,.011,2.092,1.472,1.472,0,0,0,2.081-.011l9.369-9.438h0a1.66,1.66,0,0,0,.307-.466,1.411,1.411,0,0,0,.114-.569,1.482,1.482,0,0,0-.421-1.035L17.057.452A1.448,1.448,0,0,0,14.987.418Z" transform="translate(29.354 44.84) rotate(-135)" fill="#fff"/>
+      <path id="Trazado_2549" data-name="Trazado 2549" d="M2582.977,1454.107h-11.27a1.088,1.088,0,0,1,0-2.177h11.27a1.088,1.088,0,0,1,0,2.177Z" transform="translate(-2570.618 -1431.058)" fill="#fff"/>
+      <path id="Trazado_2550" data-name="Trazado 2550" d="M12.359,2.177H1.088A1.088,1.088,0,1,1,1.088,0h11.27a1.088,1.088,0,1,1,0,2.177Z" transform="translate(23.775 0) rotate(90)" fill="#fff"/>
+      <path id="Trazado_2551" data-name="Trazado 2551" d="M12.359,2.177H1.088A1.088,1.088,0,1,1,1.088,0h11.27a1.088,1.088,0,1,1,0,2.177Z" transform="translate(5.641 4.894) rotate(45)" fill="#fff"/>
+    </g>
+  </g>
+</svg>
