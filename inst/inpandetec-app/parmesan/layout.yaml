@@ -1,0 +1,10 @@
+filtros:
+  label:
+  inputs:
+    - typeId
+    - freqId
+    - countryId
+    - generoId
+    - orienId
+    - ageId
+

@@ -1,0 +1,54 @@
+---
+typeId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: Tipo de violencia experimentada
+    choices: types()
+    selected: defaultType()
+    multiple: true
+    options: pickerOpts()
+freqId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: Frecuencia
+    choices: freq()
+    multiple: true
+    options: pickerOpts()
+countryId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: País
+    choices: countries()
+    multiple: true
+    options: pickerOpts()
+generoId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: Identidad de género
+    choices: genero()
+    multiple: true
+    options: pickerOpts()
+orienId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: Orientación sexual
+    choices: orientation()
+    multiple: true
+    options: pickerOpts()
+ageId:
+  show: true
+  input_type: sliderInput
+  input_params:
+    label: Edad
+    min: min_age()
+    max: max_age()
+    value: range_age()
+    step: 1
+
+
+
