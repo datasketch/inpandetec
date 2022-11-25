@@ -144,17 +144,17 @@ server <-
 
 
     d_filter <- reactive({
-      req(reactiveValuesToList(input))
-      ls <- reactiveValuesToList(input)[c("typeId", "freqId", "countryId", "generoId", "orienId", "ageId")]
+      ls <- parmesan_input()
+      # req(reactiveValuesToList(input))
+      ls <- ls[c("typeId", "freqId", "countryId", "generoId", "orienId", "ageId")]
       names(ls) <- c("Tipo de violencia experimentada", "Frecuencia", "País", "Identidad de género", "Orientación sexual", "Edad")
       inpandetec::data_filter(data_to_app, ls)
     })
 
-
     # Seleccionar datos ------------------------------------------
 
     d_viz <- reactive({
-      req(reactiveValuesToList(input))
+
       req(actual_but$active)
       req(d_filter())
       df <- d_filter()
@@ -244,9 +244,7 @@ server <-
       }
     })
 
-    # output$aver <- renderPrint({
-    #   inpandetec::data_viz(d_viz(), actual_but$active)
-    # })
+
 
   }
 
