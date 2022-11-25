@@ -7,8 +7,15 @@ data_filter <- function(data, var_inputs) {
   tem_ls <-
     seq_along(var_inputs) |>
     purrr::map(function(.x) {
-      df <<- df |>
-        dplyr::filter(!!dplyr::sym(names(var_inputs)[.x]) %in% var_inputs[[.x]])
+      if (!is.null(var_inputs[[.x]])) {
+        name_var <- names(var_inputs)[.x]
+        filter_var <- var_inputs[[.x]]
+        if ("Edad" %in% name_var) {
+          if (length(filter_var) == 2) filter_var <- filter_var[1]:filter_var[2]
+        }
+        df <<- df |>
+          dplyr::filter(!!dplyr::sym(name_var) %in% filter_var)
+      }
     })
   rm(tem_ls)
   df

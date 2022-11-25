@@ -23,7 +23,7 @@ ui <-
                                      "viz"),
                                  "descarga"),
                              div(class = "viz-nucleo",
-                                 "viz"
+                                 verbatimTextOutput("aver")
                              )
                          )
                     )),
@@ -52,7 +52,7 @@ server <-
     })
 
     types <- reactive({
-      unique(data_to_app$`Tipo de violencia experimentada`)
+      sort(unique(data_to_app$`Tipo de violencia experimentada`))
     })
 
     defaultType <- reactive({
@@ -61,7 +61,7 @@ server <-
     })
 
     freq <- reactive({
-      unique(data_to_app$Frecuencia)
+      sort(unique(data_to_app$Frecuencia))
     })
 
 
@@ -102,6 +102,18 @@ server <-
                     input = input, output = output, session = session,
                     env = environment())
 
+
+    d_filter <- reactive({
+      req(reactiveValuesToList(input))
+      ls <- reactiveValuesToList(input)[c("typeId", "freqId", "countryId", "generoId", "orienId", "ageId")]
+      names(ls) <- c("Tipo de violencia experimentada", "Frecuencia", "País", "Identidad de género", "Orientación sexual", "Edad")
+      inpandetec::data_filter(data_to_app, ls)
+    })
+
+
+    output$aver <- renderPrint({
+      d_filter()
+    })
 
 }
 

@@ -37,5 +37,7 @@ data_02 <- data_02 |>
 
 data_to_app <- data_01 |> left_join(data_02)
 data_to_app$Edad <- as.numeric(data_to_app$Edad)
+data_to_app$`Tipo de violencia experimentada`[is.na(data_to_app$`Tipo de violencia experimentada`)] <- "Sin información"
+data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin información"
 
 usethis::use_data(data_to_app, overwrite = TRUE)
