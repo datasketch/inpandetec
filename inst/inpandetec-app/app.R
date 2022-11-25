@@ -1,6 +1,8 @@
 library(inpandetec)
 library(shiny)
 library(parmesan)
+library(hgchmagic)
+library(lfltmagic)
 
 ui <-
   fluidPage(
@@ -23,7 +25,7 @@ ui <-
                                      uiOutput("viz_icons")),
                                  "descarga"),
                              div(class = "viz-nucleo",
-                                 verbatimTextOutput("aver")
+                                 uiOutput("viz_ui")
                              )
                          )
                     )),
@@ -49,7 +51,7 @@ server <-
 
     observe({
       if (is.null(input$viz_selection)) return()
-      viz_rec <- c("map", "bar", "treemap", "pie")
+      viz_rec <- c("map", "bar", "treemap")
       if (input$viz_selection %in% viz_rec) {
         actual_but$active <- input$viz_selection
       } else {
@@ -59,13 +61,13 @@ server <-
 
     # print viz
     output$viz_icons <- renderUI({
-      possible_viz <- c("map", "bar", "treemap", "pie")
+      possible_viz <- c("map", "bar", "treemap")
 
       suppressWarnings(
         shinyinvoer::buttonImageInput("viz_selection",
                                       " ",
                                       images = possible_viz,
-                                      tooltips = c("Mapa", "Barras", "Treemap", "Torta"),
+                                      tooltips = c("Mapa", "Barras", "Treemap"),
                                       path = "img/viz_icons/",
                                       active = actual_but$active,
                                       imageStyle = list(shadow = TRUE,
@@ -172,12 +174,79 @@ server <-
         }
       }
       inpandetec::var_selection(df, v) |>
-        inpandetec::var_aggregation(Total = dplyr::n())
+        inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
     })
 
-    output$aver <- renderPrint({
-      d_viz()
+    # Visualizar datos ------------------------------------------
+
+    viz_opts <- reactive({
+      req(d_viz())
+      req(actual_but$active)
+
+      viz <- NULL
+      if (actual_but$active == "map") {
+        viz <- "lfltmagic::lflt_choropleth_GnmNum"
+      } else {
+        tv <- "CatNum"
+        if (ncol(d_viz()) == 3) tv <- "CatCatNum"
+        viz <-  paste0("hgchmagic::","hgch_", actual_but$active, "_", tv)
+      }
+
+      l <- list(
+        opts = list(
+          data = d_viz(),
+          title_size = 15,
+          text_family = "Fira Sans",
+          title_family = "Fira Sans",
+          label_wrap_legend = 100,
+          label_wrap = 40,
+          background_color = "#ffffff",
+          map_name = "latam_countries"
+        ),
+        type = viz
+      )
+      l
     })
+
+
+
+    viz_render <- reactive({
+      req(viz_opts())
+
+      suppressWarnings(
+        do.call(eval(parse(text=viz_opts()$type)),
+                viz_opts()$opts
+        ))
+    })
+
+
+    output$hgch_viz <- highcharter::renderHighchart({
+      req(actual_but$active)
+      if (actual_but$active == "map") return()
+      req(viz_render())
+      viz_render()
+    })
+
+    output$lflt_viz <- leaflet::renderLeaflet({
+      req(actual_but$active)
+      if (actual_but$active != "map") return()
+      req(viz_render())
+      viz_render()
+    })
+
+
+    output$viz_ui <- renderUI({
+      req(actual_but$active)
+      if (actual_but$active == "map") {
+        leaflet::leafletOutput("lflt_viz")
+      } else {
+        highcharter::highchartOutput("hgch_viz")
+      }
+    })
+
+    # output$aver <- renderPrint({
+    #   inpandetec::data_viz(d_viz(), actual_but$active)
+    # })
 
   }
 
