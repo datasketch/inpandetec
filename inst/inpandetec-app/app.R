@@ -18,7 +18,7 @@ ui <-
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
-                         div(style="flex-grow: 1; min-width: 600px;",
+                         div(style="flex-grow: 1; min-width: 650px;",
                              div(class = "head-viz",
                                  div(style = "display:flex;gap:20px;margin-bottom: 20px;align-items: flex-end;",
                                      "VISUALIZACIÓN",
@@ -31,7 +31,7 @@ ui <-
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
-                         div(style = "display:block;min-width: 350px;",
+                         div(style = "display:block;max-width: 300px;",
                                  uiOutput("click_ui")
                          )
                     )
@@ -349,8 +349,9 @@ server <-
     })
 
     output$click_ui <- renderUI({
-      if (is.null(id_click_viz$id)) return(HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/>"))
-      if (is.null(click_filter())) return(HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/>"))
+      tx <- HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/><br/>Da clic <b>sobre la visualización</b> para ver más información.")
+      if (is.null(id_click_viz$id)) return(tx)
+      if (is.null(click_filter())) return(tx)
       highcharter::highchartOutput("viz_click", width = 300)
     })
 

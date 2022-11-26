@@ -85,3 +85,12 @@ data_to_app <- data_to_app |> tidyr::drop_na(Frecuencia)
 #data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin información"
 
 usethis::use_data(data_to_app, overwrite = TRUE)
+
+
+data_modal <- read_sheet("https://docs.google.com/spreadsheets/d/1Nn-eqTZNGaXhZKMT3gQmBXAQy-rfA35nBxIXqCZlPj4/edit#gid=1361438895", 2)
+usethis::use_data(data_modal, overwrite = TRUE)
+
+
+
+
+

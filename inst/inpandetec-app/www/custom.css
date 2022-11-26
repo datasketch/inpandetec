@@ -145,5 +145,10 @@ border-radius: 11px;
   height: 15px;
 }
 
+.click {
+ display: block;
+ text-align: center;
+ margin-top: 20%;
+}
 
 
