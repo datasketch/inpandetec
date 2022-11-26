@@ -201,7 +201,14 @@ server <-
           label_wrap_legend = 100,
           label_wrap = 40,
           background_color = "#ffffff",
-          map_name = "latam_countries"
+          map_name = "latam_countries",
+          map_tiles = "OpenStreetMap",
+          legend_position = "bottomleft",
+          dataLabels_align = "middle",
+          dataLabels_inside = TRUE,
+          dataLabels_show = TRUE,
+          map_min_zoom = 5,
+          map_max_zoom = 15
         ),
         type = viz
       )
@@ -231,16 +238,17 @@ server <-
       req(actual_but$active)
       if (actual_but$active != "map") return()
       req(viz_render())
-      viz_render()
+      viz_render() |>
+        leaflet::setView(lng = -86.5, lat = 11.5, 5.5)
     })
 
 
     output$viz_ui <- renderUI({
       req(actual_but$active)
       if (actual_but$active == "map") {
-        leaflet::leafletOutput("lflt_viz")
+        leaflet::leafletOutput("lflt_viz", height = 650)
       } else {
-        highcharter::highchartOutput("hgch_viz")
+        highcharter::highchartOutput("hgch_viz", height = 650)
       }
     })
 
