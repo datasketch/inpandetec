@@ -31,9 +31,8 @@ ui <-
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
-                         div(
-                           uiOutput("click_ui"),
-                           verbatimTextOutput("test")
+                         div(style = "display:block;min-width: 350px;",
+                                 uiOutput("click_ui")
                          )
                     )
                 )
@@ -339,16 +338,20 @@ server <-
     })
 
 
+    output$viz_click <- highcharter::renderHighchart({
+      if (is.null(id_click_viz$id)) return()
+      if (is.null(click_filter())) return()
+      dc <-  inpandetec::var_selection(click_filter(), `Ejemplos de violencia experimentada`) |>
+        inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+      suppressWarnings(
+        hgchmagic::hgch_pie_CatNum(dc, legend_show = FALSE, color_by = names(dc)[1])
+      )
+    })
+
     output$click_ui <- renderUI({
       if (is.null(id_click_viz$id)) return(HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/>"))
       if (is.null(click_filter())) return(HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/>"))
-      dc <- click_filter() |> dplyr::select()
-
-    })
-
-    output$test <- renderPrint({
-      click_filter()
-      #c(id_click_viz$id, id_click_viz$cat)
+      highcharter::highchartOutput("viz_click", width = 300)
     })
 
 
