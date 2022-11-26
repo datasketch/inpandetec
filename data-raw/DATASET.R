@@ -75,12 +75,13 @@ data_03 <- data_03 |>
   dplyr::group_by(respondent_id, `Tipo de violencia experimentada` = label) |>
   dplyr::summarise(`Ejemplos de violencia experimentada` = paste0(unique(ejemplos), collapse = '-'))
 
-data02 <- data_02 %>% inner_join(data_03)
+data_02 <- data_02 %>% inner_join(data_03)
 
 
 data_to_app <- data_01 |> left_join(data_02)
 data_to_app$Edad <- as.numeric(data_to_app$Edad)
-data_to_app$`Tipo de violencia experimentada`[is.na(data_to_app$`Tipo de violencia experimentada`)] <- "Sin información"
-data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin información"
+data_to_app <- data_to_app |> tidyr::drop_na(Frecuencia)
+#data_to_app$`Tipo de violencia experimentada`[is.na(data_to_app$`Tipo de violencia experimentada`)] <- "Sin información"
+#data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin información"
 
 usethis::use_data(data_to_app, overwrite = TRUE)

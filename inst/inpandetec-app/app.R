@@ -31,8 +31,10 @@ ui <-
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
-                         div(style="flex-grow: 1; min-width: 320px;",
-                             "info extra")
+                         div(
+                           uiOutput("click_ui"),
+                           verbatimTextOutput("test")
+                         )
                     )
                 )
             )
@@ -165,7 +167,7 @@ server <-
         v <- "Frecuencia"
         if (!is.null(input$freqId)) {
           if (length(unique(input$freqId)) > 1) {
-            if (length(unique(input$typeId)) > 1) v <- c(v, "Tipo de violencia experimentada")
+            if (length(unique(input$typeId)) > 1) v <- c( "Tipo de violencia experimentada", v)
           } else {
             v <- "Tipo de violencia experimentada"
             if (length(unique(input$typeId)) == 1) v <- "País"  #comparacion por pais
@@ -184,6 +186,7 @@ server <-
       req(actual_but$active)
 
       viz <- NULL
+      tv <- NULL
       if (actual_but$active == "map") {
         viz <- "lfltmagic::lflt_choropleth_GnmNum"
       } else {
@@ -191,27 +194,54 @@ server <-
         if (ncol(d_viz()) == 3) tv <- "CatCatNum"
         viz <-  paste0("hgchmagic::","hgch_", actual_but$active, "_", tv)
       }
+      if (!is.null(tv)) {
+        myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {id:event.point.name, timestamp: new Date().getTime()});}")
+        if (tv == "CatCatNum") {
+          myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {cat:this.name, id:event.point.category, timestamp: new Date().getTime()});}")
+          if (actual_but$active == "treemap")  myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {cat:event.point.node, id:event.point.name, timestamp: new Date().getTime()});}")
+        }
+      }
 
       l <- list(
         opts = list(
           data = d_viz(),
           title_size = 15,
+          orientation = "hor",
+          ver_title = " ",
+          hor_title = " ",
           text_family = "Fira Sans",
           title_family = "Fira Sans",
           label_wrap_legend = 100,
           label_wrap = 40,
           background_color = "#ffffff",
+          axis_line_y_size = 1,
+          axis_line_color = "#dbd9d9",
+          grid_y_color = "#dbd9d9",
+          grid_x_color = "#fafafa",
+          cursor = "pointer",
           map_name = "latam_countries",
           map_tiles = "OpenStreetMap",
           legend_position = "bottomleft",
-          dataLabels_align = "middle",
-          dataLabels_inside = TRUE,
-          dataLabels_show = TRUE,
+          border_weight = 0.3,
           map_min_zoom = 5,
           map_max_zoom = 15
         ),
         type = viz
       )
+
+      if (actual_but$active == "map") {
+        l$opts$na_color <- "transparent"
+      } else {
+        l$opts$clickFunction = htmlwidgets::JS(myFunc)
+      }
+
+      if (actual_but$active == "treemap") {
+        l$opts$dataLabels_align <- "middle"
+        l$opts$dataLabels_inside <- TRUE
+        l$opts$dataLabels_show <- TRUE
+        l$opts$legend_show <- FALSE
+      }
+
       l
     })
 
@@ -235,7 +265,7 @@ server <-
     })
 
     output$lflt_viz <- leaflet::renderLeaflet({
-      req(actual_but$active)
+      print(actual_but$active)
       if (actual_but$active != "map") return()
       req(viz_render())
       viz_render() |>
@@ -245,6 +275,8 @@ server <-
 
     output$viz_ui <- renderUI({
       req(actual_but$active)
+      if (is.null(d_viz())) return()
+      if (nrow(d_viz()) == 0) return()
       if (actual_but$active == "map") {
         leaflet::leafletOutput("lflt_viz", height = 650)
       } else {
@@ -252,6 +284,72 @@ server <-
       }
     })
 
+
+    id_click_viz <- reactiveValues(id = NULL, cat = NULL)
+
+    observeEvent(input$lflt_viz_shape_click, {
+      id_click_viz$id <- input$lflt_viz_shape_click$id
+    })
+
+
+    observeEvent(input$hcClicked, {
+      if (is.null(d_viz())) return()
+      df <- d_viz()
+      viz <- actual_but$active
+      if (ncol(df) == 2) {
+        id_click_viz$id <- input$hcClicked$id #frecuencia
+      } else {
+        if (viz == "bar") {
+          id_click_viz$id <- input$hcClicked$id #frecuencia
+          id_click_viz$cat <- input$hcClicked$cat # tipo
+        } else if (viz == "treemap") {
+          id_click_viz$id <- input$hcClicked$cat$name
+          id_click_viz$cat <- input$hcClicked$cat$parent
+        } else {
+          return()
+        }
+      }
+
+    })
+
+    click_filter <- reactive({
+      if (is.null(id_click_viz$id)) return()
+      dv <- d_viz()
+      df <- d_filter()
+      dc <- NULL
+      if ("País" %in% names(dv)) {
+        dc <- df |> dplyr::filter(País %in% id_click_viz$id)
+      }
+      if ("Frecuencia" %in% names(dv)) {
+        dc <- df |> dplyr::filter(Frecuencia %in% id_click_viz$id)
+      }
+      if ("Tipo de violencia experimentada" %in% names(dv)) {
+        if (!is.null(id_click_viz$cat)) {
+          dc <- dc |> dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$cat)
+        } else {
+          dc <- df |> dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$id)
+        }
+      }
+      if ("Identidad de género" %in% names(dv)) {
+        dc <- df |> dplyr::filter(`Identidad de género` %in% id_click_viz$id)
+      }
+      if (nrow(dc) == 0) dc <- NULL
+      dc
+
+    })
+
+
+    output$click_ui <- renderUI({
+      if (is.null(id_click_viz$id)) return(HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/>"))
+      if (is.null(click_filter())) return(HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/>"))
+      dc <- click_filter() |> dplyr::select()
+
+    })
+
+    output$test <- renderPrint({
+      click_filter()
+      #c(id_click_viz$id, id_click_viz$cat)
+    })
 
 
   }
