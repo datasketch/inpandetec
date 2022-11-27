@@ -3,6 +3,7 @@ library(shiny)
 library(parmesan)
 library(hgchmagic)
 library(lfltmagic)
+library(dsmodules)
 
 ui <-
   fluidPage(
@@ -23,7 +24,7 @@ ui <-
                                  div(style = "display:flex;gap:20px;margin-bottom: 20px;align-items: flex-end;",
                                      "VISUALIZACIÓN",
                                      uiOutput("viz_icons")),
-                                 "descarga"),
+                                  uiOutput("descargas")),
                              div(class = "viz-nucleo",
                                  uiOutput("viz_ui")
                              )
@@ -31,8 +32,12 @@ ui <-
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
-                         div(style = "display:block;max-width: 300px;",
-                                 uiOutput("click_ui")
+                         div(style = "display:block;max-width: 300px;text-align: center;",
+                                 uiOutput("click_ui"),
+                             div(style = "margin-top:3%;",
+                             actionButton("modal_info", "Testimonios", icon = icon("user"))
+                             )
+                             #verbatimTextOutput("test")
                          )
                     )
                 )
@@ -355,6 +360,54 @@ server <-
       highcharter::highchartOutput("viz_click", width = 300)
     })
 
+
+    info_modal <- reactive({
+      req(d_filter())
+      ls <- list("Tipo de violencia" = unique(d_filter()$`Tipo de violencia experimentada`))
+      dm <- inpandetec::data_filter(data_modal, ls)
+      HTML(
+        paste0(
+      purrr::map(unique(dm$`Tipo de violencia`), function(x) {
+        df <- dm |> dplyr::filter(`Tipo de violencia` %in% x)
+        HTML(
+          paste0(
+          div(class = "modal-type",
+              x),
+          div(class = "modal-text",
+              HTML( paste0(df$Testimonio, collapse = "</br></br>"))
+          )
+          )
+        )
+
+      }), collapse = "</br>" )
+      )
+
+    })
+
+    observeEvent(input$modal_info, {
+      showModal(modalDialog(
+        title = "Testimonios",
+        info_modal(),
+        easyClose = TRUE,
+        footer = NULL
+      ))
+    })
+
+
+
+    output$descargas <- renderUI({
+      if (is.null(actual_but$active)) return()
+      # if (r$active_viz != "table") {
+        dsmodules::downloadImageUI("download_viz", dropdownLabel ="Descargar", formats = c("jpeg", "pdf", "png", "html"), display = "dropdown", text = "Descargar")
+      # } else {
+      #   dsmodules::downloadTableUI("dropdown_table", dropdownLabel = "Descargar", formats = c("csv", "xlsx", "json"), display = "dropdown", text = "Descargar")
+      # }
+    })
+
+    observe({
+     # dsmodules::downloadTableServer("dropdown_table", element = reactive(r$d_fil), formats = c("csv", "xlsx", "json"))
+      dsmodules::downloadImageServer("download_viz", element = reactive(viz_render()), lib = "highcharter", formats = c("jpeg", "pdf", "png", "html"), file_prefix = "plot")
+    })
 
   }
 

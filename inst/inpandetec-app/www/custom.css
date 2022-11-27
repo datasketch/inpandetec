@@ -151,4 +151,16 @@ border-radius: 11px;
  margin-top: 20%;
 }
 
+.modal-body {
+  position: relative;
+  padding: 11%;
+  max-height: 450px;
+  overflow: auto;
+}
+
+.modal-type {
+ font-weight: 500;
+ border-bottom: 1px solid #4ad3ac;
+ margin-bottom: 7px;
+}
 
