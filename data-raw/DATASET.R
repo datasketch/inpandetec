@@ -81,6 +81,7 @@ data_02 <- data_02 %>% inner_join(data_03)
 data_to_app <- data_01 |> left_join(data_02)
 data_to_app$Edad <- as.numeric(data_to_app$Edad)
 data_to_app <- data_to_app |> tidyr::drop_na(Frecuencia)
+data_to_app$País[data_to_app$País == "República Dominicana"] <- "Dominican Republic"
 #data_to_app$`Tipo de violencia experimentada`[is.na(data_to_app$`Tipo de violencia experimentada`)] <- "Sin información"
 #data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin información"
 

@@ -15,16 +15,17 @@ ui <-
             div(class = "app-container",
                 div(class = "panel top-malibu",
                     div (class = "panel-body",
+                         div(class = "panel-title", style = "padding: 18px 0px 8px 0px;", "Filtros"),
                          uiOutput("controls")
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
-                         div(style="flex-grow: 1; min-width: 650px;",
+                         div(style="flex-grow: 1; min-width: 750px;",
                              div(class = "head-viz",
                                  div(style = "display:flex;gap:20px;margin-bottom: 20px;align-items: flex-end;",
-                                     "VISUALIZACIÓN",
+                                     div(class = "panel-title" ,"Visualización"),
                                      uiOutput("viz_icons")),
-                                  uiOutput("descargas")),
+                                 uiOutput("descargas")),
                              div(class = "viz-nucleo",
                                  uiOutput("viz_ui")
                              )
@@ -32,10 +33,11 @@ ui <-
                     )),
                 div(class = "panel",
                     div (class = "panel-body",
+                         div(class = "panel-title", style = "padding: 18px 0px 8px 0px;" ,"Detalle"),
                          div(style = "display:block;max-width: 300px;text-align: center;",
-                                 uiOutput("click_ui"),
+                             uiOutput("click_ui"),
                              div(style = "margin-top:3%;",
-                             actionButton("modal_info", "Testimonios", icon = icon("user"))
+                                 actionButton("modal_info", "Testimonios", icon = icon("user"))
                              )
                              #verbatimTextOutput("test")
                          )
@@ -179,8 +181,17 @@ server <-
           }
         }
       }
+      df <-
       inpandetec::var_selection(df, v) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+
+      if (ncol(df) == 3) {
+        available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE") ##F4B3BE
+        dic_col <- data.frame(tipo = unique(data_to_app$`Tipo de violencia experimentada`), ...colors = available_colors)
+        df <- df |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "tipo"))
+      }
+
+      df
     })
 
     # Visualizar datos ------------------------------------------
@@ -188,16 +199,16 @@ server <-
     viz_opts <- reactive({
       req(d_viz())
       req(actual_but$active)
-
       viz <- NULL
       tv <- NULL
       if (actual_but$active == "map") {
         viz <- "lfltmagic::lflt_choropleth_GnmNum"
       } else {
         tv <- "CatNum"
-        if (ncol(d_viz()) == 3) tv <- "CatCatNum"
+        if (ncol(d_viz()) == 4) tv <- "CatCatNum"
         viz <-  paste0("hgchmagic::","hgch_", actual_but$active, "_", tv)
       }
+
       if (!is.null(tv)) {
         myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClicked', "', {id:event.point.name, timestamp: new Date().getTime()});}")
         if (tv == "CatCatNum") {
@@ -213,8 +224,8 @@ server <-
           orientation = "hor",
           ver_title = " ",
           hor_title = " ",
-          text_family = "Fira Sans",
-          title_family = "Fira Sans",
+          text_family = "Mulish",
+          title_family = "Mulish",
           label_wrap_legend = 100,
           label_wrap = 40,
           background_color = "#ffffff",
@@ -222,8 +233,10 @@ server <-
           axis_line_color = "#dbd9d9",
           grid_y_color = "#dbd9d9",
           grid_x_color = "#fafafa",
+          title_family = "Lato",
+          text_family  = "Lato",
           cursor = "pointer",
-          map_name = "latam_countries",
+          map_name = "latamcaribbean_countries",#"latam_countries",
           map_tiles = "OpenStreetMap",
           legend_position = "bottomleft",
           border_weight = 0.3,
@@ -235,8 +248,17 @@ server <-
 
       if (actual_but$active == "map") {
         l$opts$na_color <- "transparent"
+        l$opts$palette_colors <- rev(c("#EA524E", "#F16E54", "#F68660", "#F08D45", "#F8A557", "#FDBD6B", "#FDD783"))
       } else {
-        l$opts$clickFunction = htmlwidgets::JS(myFunc)
+        l$opts$clickFunction <- htmlwidgets::JS(myFunc)
+        # l$opts$palette_colors <- c("#4BAEE1", "#EA524E ", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB")
+        if (ncol(d_viz()) == 2) {
+          l$opts$palette_colors <- c("#4BAEE1")
+          # l$opts$color_by <- names(d_viz())[1]
+        }
+        # if (ncol(d_viz()) == 4) {
+        #   l$opts$color_by <- names(d_viz())[2]
+        # }
       }
 
       if (actual_but$active == "treemap") {
@@ -254,10 +276,16 @@ server <-
     viz_render <- reactive({
       req(viz_opts())
 
-      suppressWarnings(
-        do.call(eval(parse(text=viz_opts()$type)),
-                viz_opts()$opts
-        ))
+
+      v <-  suppressWarnings(do.call(eval(parse(text=viz_opts()$type)),
+                                     viz_opts()$opts))
+
+      if (actual_but$active == "map") {
+        v <- v  |>
+          leaflet::setView(lng = -79.5, lat = 17.5, 5.2) #-86.5   11.5
+      }
+      v
+
     })
 
 
@@ -272,8 +300,7 @@ server <-
       print(actual_but$active)
       if (actual_but$active != "map") return()
       req(viz_render())
-      viz_render() |>
-        leaflet::setView(lng = -86.5, lat = 11.5, 5.5)
+      viz_render()
     })
 
 
@@ -346,10 +373,25 @@ server <-
     output$viz_click <- highcharter::renderHighchart({
       if (is.null(id_click_viz$id)) return()
       if (is.null(click_filter())) return()
-      dc <-  inpandetec::var_selection(click_filter(), `Ejemplos de violencia experimentada`) |>
+      dc <- click_filter() |> tidyr::separate_rows(`Ejemplos de violencia experimentada`, sep = "-")
+      dc <-  inpandetec::var_selection(dc, `Ejemplos de violencia experimentada`) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+      available_colors <- c("#4BAEE1", "#EA524E ", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+      dic_col <- data.frame(ejemplo = unique(dc$`Ejemplos de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Ejemplos de violencia experimentada`)))])
+      dc <- dc |> dplyr::left_join(dic_col, by = c("Ejemplos de violencia experimentada" = "ejemplo"))
       suppressWarnings(
-        hgchmagic::hgch_pie_CatNum(dc, legend_show = FALSE, color_by = names(dc)[1])
+        hgchmagic::hgch_pie_CatNum(dc,
+                                   background_color = "#ffffff",
+                                   legend_show = FALSE,
+                                   #palette_colors = c("#5151f2", "#00afff ", "#4ad3ac", "#ffd150", "#ffe0bb", "#f26330", "#163875"),
+                                   color_by = names(dc)[1],
+                                   title = "Ejemplos de violencias experimentadas por acoso y hostigamiento",
+                                   title_size = 13,
+                                   title_family = "Raleway",
+                                   text_family  = "Mulish",
+                                   title_align = "center") |>
+          hc_tooltip(style = list(
+            width = "150px"))
       )
     })
 
@@ -367,19 +409,19 @@ server <-
       dm <- inpandetec::data_filter(data_modal, ls)
       HTML(
         paste0(
-      purrr::map(unique(dm$`Tipo de violencia`), function(x) {
-        df <- dm |> dplyr::filter(`Tipo de violencia` %in% x)
-        HTML(
-          paste0(
-          div(class = "modal-type",
-              x),
-          div(class = "modal-text",
-              HTML( paste0(df$Testimonio, collapse = "</br></br>"))
-          )
-          )
-        )
+          purrr::map(unique(dm$`Tipo de violencia`), function(x) {
+            df <- dm |> dplyr::filter(`Tipo de violencia` %in% x)
+            HTML(
+              paste0(
+                div(class = "modal-type",
+                    x),
+                div(class = "modal-text",
+                    HTML( paste0(df$Testimonio, collapse = "</br></br>"))
+                )
+              )
+            )
 
-      }), collapse = "</br>" )
+          }), collapse = "</br>" )
       )
 
     })
@@ -398,14 +440,14 @@ server <-
     output$descargas <- renderUI({
       if (is.null(actual_but$active)) return()
       # if (r$active_viz != "table") {
-        dsmodules::downloadImageUI("download_viz", dropdownLabel ="Descargar", formats = c("jpeg", "pdf", "png", "html"), display = "dropdown", text = "Descargar")
+      dsmodules::downloadImageUI("download_viz", dropdownLabel ="Descargar", formats = c("jpeg", "pdf", "png", "html"), display = "dropdown", text = "Descargar")
       # } else {
       #   dsmodules::downloadTableUI("dropdown_table", dropdownLabel = "Descargar", formats = c("csv", "xlsx", "json"), display = "dropdown", text = "Descargar")
       # }
     })
 
     observe({
-     # dsmodules::downloadTableServer("dropdown_table", element = reactive(r$d_fil), formats = c("csv", "xlsx", "json"))
+      # dsmodules::downloadTableServer("dropdown_table", element = reactive(r$d_fil), formats = c("csv", "xlsx", "json"))
       dsmodules::downloadImageServer("download_viz", element = reactive(viz_render()), lib = "highcharter", formats = c("jpeg", "pdf", "png", "html"), file_prefix = "plot")
     })
 
