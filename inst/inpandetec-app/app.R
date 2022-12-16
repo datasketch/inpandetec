@@ -99,7 +99,8 @@ server <-
     })
 
     types <- reactive({
-      sort(unique(data_to_app$`Tipo de violencia experimentada`))
+      sort(unique(data_to_app$`Tipo de violencia experimentada`)) |>
+        setdiff("Sin respuesta")
     })
 
     defaultType <- reactive({
@@ -108,7 +109,8 @@ server <-
     })
 
     freq <- reactive({
-      sort(unique(data_to_app$Frecuencia))
+      sort(unique(data_to_app$Frecuencia)) |>
+        setdiff("Sin respuesta")
     })
 
 
@@ -407,9 +409,10 @@ server <-
 
 
     output$viz_click <- highcharter::renderHighchart({
+      tryCatch({
       if (is.null(id_click_viz$id)) return()
       if (is.null(click_filter())) return()
-
+      if (nrow(click_filter()) == 0) return()
       tx <- "Ejemplos de violencias experimentadas por acoso y hostigamiento"
 
       if (is.null(input$typeId) |
@@ -443,12 +446,17 @@ server <-
           hc_tooltip(style = list(
             width = "150px"))
       )
+      },
+      error = function(e){
+        return()
+      })
     })
 
     output$click_ui <- renderUI({
       tx <- HTML("<div class = 'click'><img src='img/click/click.svg' style='width: 50px; display:block;margin-left: 40%;'/><br/>Da clic <b>sobre la visualización</b> para ver más información.")
       if (is.null(id_click_viz$id)) return(tx)
       if (is.null(click_filter())) return(tx)
+      if (nrow(click_filter()) == 0) return("No hay información para los filtros seleccionados")
       highcharter::highchartOutput("viz_click", width = 300)
     })
 

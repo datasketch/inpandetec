@@ -19,7 +19,7 @@ data_01 <- data |> select(respondent_id,
                           `Otra identificación étnica` = `...24`,
                           `Personas con discapacidad` = `¿Eres una persona con discapacidad?`)
 
-
+length(unique(data_01$respondent_id))
 idQ <- names(data)[grep("cuán frecuente", names(data))]
 data_02 <- data[,c("respondent_id", idQ)]
 names(data_02) <- c("respondent_id",
@@ -37,7 +37,7 @@ names(data_02) <- c("respondent_id",
 data_02 <- data_02 |>
   gather("Tipo de violencia experimentada", "Frecuencia", -respondent_id) |>
   drop_na(Frecuencia)
-
+length(unique(data_02$respondent_id))
 idE <- grep("De los siguientes ejemplos de ", names(data))
 idE <- purrr::map(idE, ~ .x:(.x+7)) |> unlist()
 data_03 <- data[,c(1, idE)]
@@ -74,7 +74,7 @@ data_03 <- data_03 |>
   tidyr::drop_na() |>
   dplyr::left_join(dic) %>%
   dplyr::select(-id_agresion)
-
+length(unique(data_03$respondent_id))
 data_03 <- data_03 |>
   dplyr::group_by(respondent_id, `Tipo de violencia experimentada` = label) |>
   dplyr::summarise(`Ejemplos de violencia experimentada` = paste0(unique(ejemplos), collapse = '-'))
@@ -84,7 +84,9 @@ data_02 <- data_02 %>% inner_join(data_03)
 
 data_to_app <- data_01 |> left_join(data_02)
 data_to_app$Edad <- as.numeric(data_to_app$Edad)
-data_to_app <- data_to_app |> tidyr::drop_na(Frecuencia)
+data_to_app <- data_to_app #|> tidyr::drop_na(Frecuencia)
+data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin respuesta"
+data_to_app$`Tipo de violencia experimentada`[is.na(data_to_app$`Tipo de violencia experimentada`)] <- "Sin respuesta"
 data_to_app$País[data_to_app$País == "República Dominicana"] <- "Dominican Republic"
 #data_to_app$`Tipo de violencia experimentada`[is.na(data_to_app$`Tipo de violencia experimentada`)] <- "Sin información"
 #data_to_app$Frecuencia[is.na(data_to_app$Frecuencia)] <- "Sin información"
