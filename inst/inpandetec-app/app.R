@@ -421,14 +421,14 @@ server <-
         dc <- click_filter() |> dplyr::select(`Tipo de violencia experimentada`)
         dc <-  inpandetec::var_selection(dc, `Tipo de violencia experimentada`) |>
           inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
-        available_colors <- c("#4BAEE1", "#EA524E ", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+        available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
         dic_col <- data.frame(ejemplo = unique(dc$`Tipo de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Tipo de violencia experimentada`)))])
         dc <- dc |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "ejemplo"))
       } else {
       dc <- click_filter() |> tidyr::separate_rows(`Ejemplos de violencia experimentada`, sep = "-")
       dc <-  inpandetec::var_selection(dc, `Ejemplos de violencia experimentada`) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
-      available_colors <- c("#4BAEE1", "#EA524E ", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+      available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
       dic_col <- data.frame(ejemplo = unique(dc$`Ejemplos de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Ejemplos de violencia experimentada`)))])
       dc <- dc |> dplyr::left_join(dic_col, by = c("Ejemplos de violencia experimentada" = "ejemplo"))
       }

@@ -5,9 +5,9 @@ account: datasketch
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7738936
-bundleId: 6645190
+bundleId: 6645842
 url: https://datasketch.shinyapps.io/inpandetec-app/
-when: 1671209717.40993
-lastSyncTime: 1671209717.40996
+when: 1671220826.18363
+lastSyncTime: 1671220826.18365
 asMultiple: FALSE
 asStatic: FALSE
