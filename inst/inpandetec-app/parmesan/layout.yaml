@@ -6,5 +6,7 @@ filtros:
     - countryId
     - generoId
     - orienId
+    - etniaId
+    - discId
     - ageId
 

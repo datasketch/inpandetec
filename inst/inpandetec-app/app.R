@@ -138,6 +138,13 @@ server <-
       c(min_age(), max_age())
     })
 
+    etnia <- reactive({
+      unique(data_to_app$`Identificación étnica`)
+    })
+
+    discapacidad <- reactive({
+      unique(data_to_app$`Personas con discapacidad`)
+    })
 
     # Renderizar inputs con parmesan ------------------------------------------
 
@@ -155,8 +162,11 @@ server <-
     d_filter <- reactive({
       ls <- parmesan_input()
       # req(reactiveValuesToList(input))
-      ls <- ls[c("typeId", "freqId", "countryId", "generoId", "orienId", "ageId")]
-      names(ls) <- c("Tipo de violencia experimentada", "Frecuencia", "País", "Identidad de género", "Orientación sexual", "Edad")
+      ls <- ls[c("typeId", "freqId", "countryId", "generoId", "orienId",
+                 "etniaId" ,"discId", "ageId")]
+      names(ls) <- c("Tipo de violencia experimentada", "Frecuencia", "País",
+                     "Identidad de género", "Orientación sexual",
+                     "Identificación étnica", "Personas con discapacidad", "Edad")
       inpandetec::data_filter(data_to_app, ls)
     })
 
@@ -167,6 +177,7 @@ server <-
       req(actual_but$active)
       req(d_filter())
       df <- d_filter()
+      if (nrow(df) == 0) return()
       v <- NULL
       if (actual_but$active == "map") {
         v <- c("País")
@@ -308,8 +319,8 @@ server <-
 
     output$viz_ui <- renderUI({
       req(actual_but$active)
-      if (is.null(d_viz())) return()
-      if (nrow(d_viz()) == 0) return()
+      if (is.null(d_viz())) return("Sin datos para los filtros seleccionados")
+      if (nrow(d_viz()) == 0) return("Sin datos para los filtros seleccionados")
       if (actual_but$active == "map") {
         leaflet::leafletOutput("lflt_viz", height = 650)
       } else {

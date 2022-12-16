@@ -40,6 +40,22 @@ orienId:
     choices: orientation()
     multiple: true
     options: pickerOpts()
+etniaId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: Identificación étnica
+    choices: etnia()
+    multiple: true
+    options: pickerOpts()
+discId:
+  show: true
+  input_type: pickerInput
+  input_params:
+    label: Personas con discapacidad
+    choices: discapacidad()
+    multiple: true
+    options: pickerOpts()
 ageId:
   show: true
   input_type: sliderInput
