@@ -1,3 +1,4 @@
+webshot::install_phantomjs()
 library(inpandetec)
 library(shiny)
 library(parmesan)
@@ -237,7 +238,8 @@ server <-
           text_family  = "Lato",
           cursor = "pointer",
           map_name = "latamcaribbean_countries",#"latam_countries",
-          map_tiles = "OpenStreetMap",
+          background_color = "#ffffff",
+          #map_tiles = "OpenStreetMap",
           legend_position = "bottomleft",
           border_weight = 0.3,
           map_min_zoom = 5,
