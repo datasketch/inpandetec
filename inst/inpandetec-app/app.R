@@ -1,6 +1,7 @@
 webshot::install_phantomjs()
 library(inpandetec)
 library(shiny)
+library(shinyWidgets)
 library(parmesan)
 library(hgchmagic)
 library(lfltmagic)
@@ -60,7 +61,7 @@ server <-
 
     observe({
       if (is.null(input$viz_selection)) return()
-      viz_rec <- c("map", "bar", "treemap")
+      viz_rec <- c("map", "bar", "treemap", "table")
       if (input$viz_selection %in% viz_rec) {
         actual_but$active <- input$viz_selection
       } else {
@@ -70,13 +71,13 @@ server <-
 
     # print viz
     output$viz_icons <- renderUI({
-      possible_viz <- c("map", "bar", "treemap")
+      possible_viz <- c("map", "bar", "treemap", "table")
 
       suppressWarnings(
         shinyinvoer::buttonImageInput("viz_selection",
                                       " ",
                                       images = possible_viz,
-                                      tooltips = c("Mapa", "Barras", "Treemap"),
+                                      tooltips = c("Mapa", "Barras", "Treemap", "Tabla"),
                                       path = "img/viz_icons/",
                                       active = actual_but$active,
                                       imageStyle = list(shadow = TRUE,
@@ -194,7 +195,7 @@ server <-
         }
       }
       df <-
-      inpandetec::var_selection(df, v) |>
+        inpandetec::var_selection(df, v) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
 
       if (ncol(df) == 3) {
@@ -304,7 +305,7 @@ server <-
 
     output$hgch_viz <- highcharter::renderHighchart({
       req(actual_but$active)
-      if (actual_but$active == "map") return()
+      if (actual_but$active %in% c("map", "table")) return()
       req(viz_render())
       viz_render()
     })
@@ -316,6 +317,24 @@ server <-
       viz_render()
     })
 
+    output$dt_viz <- DT::renderDataTable({
+      req(actual_but$active)
+      if (actual_but$active != "table") return()
+      req(d_filter())
+      df <- d_filter()
+      dtable <- DT::datatable(df,
+                              rownames = F,
+                              selection = 'none',
+                              options = list(
+                                scrollX = T,
+                                fixedColumns = TRUE,
+                                fixedHeader = TRUE,
+                                scrollY = "500px"
+                              ))
+
+      dtable
+    })
+
 
     output$viz_ui <- renderUI({
       req(actual_but$active)
@@ -323,6 +342,8 @@ server <-
       if (nrow(d_viz()) == 0) return("Sin datos para los filtros seleccionados")
       if (actual_but$active == "map") {
         leaflet::leafletOutput("lflt_viz", height = 650)
+      } else if (actual_but$active == "table") {
+        DT::dataTableOutput("dt_viz", width = "900px")
       } else {
         highcharter::highchartOutput("hgch_viz", height = 650)
       }
@@ -369,9 +390,11 @@ server <-
       }
       if ("Tipo de violencia experimentada" %in% names(dv)) {
         if (!is.null(id_click_viz$cat)) {
-          dc <- dc |> dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$cat)
+          dc <- dc |>
+            dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$cat)
         } else {
-          dc <- df |> dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$id)
+          dc <- df |>
+            dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$id)
         }
       }
       if ("Identidad de género" %in% names(dv)) {
@@ -386,19 +409,33 @@ server <-
     output$viz_click <- highcharter::renderHighchart({
       if (is.null(id_click_viz$id)) return()
       if (is.null(click_filter())) return()
+
+      tx <- "Ejemplos de violencias experimentadas por acoso y hostigamiento"
+
+      if (is.null(input$typeId) |
+          length(input$typeId) == length(unique(data_to_app$`Tipo de violencia experimentada`))) {
+        tx <- "Tipos de violencias experimentadas por acoso y hostigamiento"
+        dc <- click_filter() |> dplyr::select(`Tipo de violencia experimentada`)
+        dc <-  inpandetec::var_selection(dc, `Tipo de violencia experimentada`) |>
+          inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+        available_colors <- c("#4BAEE1", "#EA524E ", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+        dic_col <- data.frame(ejemplo = unique(dc$`Tipo de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Tipo de violencia experimentada`)))])
+        dc <- dc |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "ejemplo"))
+      } else {
       dc <- click_filter() |> tidyr::separate_rows(`Ejemplos de violencia experimentada`, sep = "-")
       dc <-  inpandetec::var_selection(dc, `Ejemplos de violencia experimentada`) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
       available_colors <- c("#4BAEE1", "#EA524E ", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
       dic_col <- data.frame(ejemplo = unique(dc$`Ejemplos de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Ejemplos de violencia experimentada`)))])
       dc <- dc |> dplyr::left_join(dic_col, by = c("Ejemplos de violencia experimentada" = "ejemplo"))
+      }
       suppressWarnings(
         hgchmagic::hgch_pie_CatNum(dc,
                                    background_color = "#ffffff",
                                    legend_show = FALSE,
                                    #palette_colors = c("#5151f2", "#00afff ", "#4ad3ac", "#ffd150", "#ffe0bb", "#f26330", "#163875"),
                                    color_by = names(dc)[1],
-                                   title = "Ejemplos de violencias experimentadas por acoso y hostigamiento",
+                                   title = tx,
                                    title_size = 13,
                                    title_family = "Raleway",
                                    text_family  = "Mulish",
@@ -452,15 +489,15 @@ server <-
 
     output$descargas <- renderUI({
       if (is.null(actual_but$active)) return()
-      # if (r$active_viz != "table") {
-      dsmodules::downloadImageUI("download_viz", dropdownLabel ="Descargar", formats = c("jpeg", "pdf", "png", "html"), display = "dropdown", text = "Descargar")
-      # } else {
-      #   dsmodules::downloadTableUI("dropdown_table", dropdownLabel = "Descargar", formats = c("csv", "xlsx", "json"), display = "dropdown", text = "Descargar")
-      # }
+      if (actual_but$active != "table") {
+        dsmodules::downloadImageUI("download_viz", dropdownLabel ="Descargar", formats = c("jpeg", "pdf", "png", "html"), display = "dropdown", text = "Descargar")
+      } else {
+        dsmodules::downloadTableUI("dropdown_table", dropdownLabel = "Descargar", formats = c("csv", "xlsx", "json"), display = "dropdown", text = "Descargar")
+      }
     })
 
     observe({
-      # dsmodules::downloadTableServer("dropdown_table", element = reactive(r$d_fil), formats = c("csv", "xlsx", "json"))
+      dsmodules::downloadTableServer("dropdown_table", element = reactive(d_filter()), formats = c("csv", "xlsx", "json"))
       dsmodules::downloadImageServer("download_viz", element = reactive(viz_render()), lib = "highcharter", formats = c("jpeg", "pdf", "png", "html"), file_prefix = "plot")
     })
 
