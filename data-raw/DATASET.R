@@ -6,6 +6,7 @@ library(dplyr)
 
 data <- read_sheet("https://docs.google.com/spreadsheets/d/1WNIG9kASXbjtX9No8nWddPxN-uSoqqp-2yCh6W1Td5M/edit#gid=1704864021")
 data <- data[-1,]
+data$`Te identificas como:`[data$`Te identificas como:` == "Otro (especifica por favor)"] <- "Otro"
 
 data_01 <- data |> select(respondent_id,
                           País = `País en el que vives`,
@@ -13,7 +14,10 @@ data_01 <- data |> select(respondent_id,
                           `Identidad de género`,
                           `Otra identidad de género` = `...20`,
                           `Orientación sexual`,
-                          `Otra orientación sexual` = `...22`)
+                          `Otra orientación sexual` = `...22`,
+                           `Identificación étnica` = `Te identificas como:`,
+                          `Otra identificación étnica` = `...24`,
+                          `Personas con discapacidad` = `¿Eres una persona con discapacidad?`)
 
 
 idQ <- names(data)[grep("cuán frecuente", names(data))]
