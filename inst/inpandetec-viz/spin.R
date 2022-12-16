@@ -1,3 +1,4 @@
+library(inpandetec)
 library(hgchmagic)
 library(lfltmagic)
 
@@ -36,9 +37,13 @@ pais <- data_to_app |>
   dplyr::group_by(País) |>
   dplyr::summarise(Total = dplyr::n())
 
-lfltmagic::lflt_choropleth_GnmNum(data = pais, theme = theme) |>
+viz_map <- lfltmagic::lflt_choropleth_GnmNum(data = pais, theme = theme) |>
   leaflet::setView(lng = -79.5, lat = 17.5, 5.2)
+htmlwidgets::saveWidget(viz_map, file = "mapa_encuestados.html")
 
-
+hostigamiento <- data_to_app |>
+  dplyr::select(`Tipo de violencia experimentada`, Frecuencia)
+theme$palette_colors
+hgchmagic::hgch_sankey_CatCat(hostigamiento, theme = theme)
 
 
