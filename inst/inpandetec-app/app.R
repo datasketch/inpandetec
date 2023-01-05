@@ -206,8 +206,8 @@ server <-
         inpandetec::var_selection(df, v) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
 
-      if (ncol(df) == 3) {
-        available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE") ##F4B3BE
+     if (ncol(df) == 3) {
+        available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE", "#dddddd") #
         dic_col <- data.frame(tipo = unique(data_to_app$`Tipo de violencia experimentada`), ...colors = available_colors)
         df <- df |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "tipo"))
       }
