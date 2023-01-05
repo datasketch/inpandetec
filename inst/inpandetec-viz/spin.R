@@ -23,8 +23,8 @@ theme <-  list(
   #map_tiles = "OpenStreetMap",
   legend_position = "bottomleft",
   border_weight = 0.3,
-  map_min_zoom = 5,
-  map_max_zoom = 15,
+  map_min_zoom = 3,
+  map_max_zoom = 5,
   na_color = "transparent",
   palette_colors = rev(c("#EA524E", "#F16E54", "#F68660", "#F08D45", "#F8A557", "#FDBD6B", "#FDD783"))
 )
@@ -37,7 +37,7 @@ pais <- data_to_app |>
   dplyr::summarise(Total = dplyr::n())
 
 viz_map <- lfltmagic::lflt_choropleth_GnmNum(data = pais, theme = theme) |>
-  leaflet::setView(lng = -79.5, lat = 17.5, 5.2)
+  leaflet::setView(lng = -79.5, lat = 18.5, 4)
 htmlwidgets::saveWidget(viz_map, file = "mapa_encuestados.html", background = "transparent")
 
 hostigamiento <- data_to_app |>

@@ -15,6 +15,7 @@ freqId:
     label: Frecuencia
     choices: freq()
     multiple: true
+    selected: freq_sel()
     options: pickerOpts()
 countryId:
   show: true

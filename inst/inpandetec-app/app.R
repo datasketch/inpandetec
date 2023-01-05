@@ -105,7 +105,9 @@ server <-
 
     defaultType <- reactive({
       req(types())
-      types()[1]
+      tp <- types()[1]
+      if (!is.null(input$countryId)) tp <- NULL
+      tp
     })
 
     freq <- reactive({
@@ -113,6 +115,10 @@ server <-
         setdiff("Sin respuesta")
     })
 
+    freq_sel <- reactive({
+      if (is.null(input$countryId)) return()
+      freq()[1]
+    })
 
     countries <- reactive({
       unique(data_to_app$País)
@@ -192,7 +198,7 @@ server <-
           } else {
             v <- "Tipo de violencia experimentada"
             if (length(unique(input$typeId)) == 1) v <- "País"  #comparacion por pais
-            if (length(unique(input$countryId)) == 1 & length(unique(input$typeId)) == 1) v <- "Identidad de género"  #comparacion por pais
+            if (length(unique(input$countryId)) == 1 & length(unique(input$typeId)) == 1) v <- "Tipo de violencia experimentada"  #comparacion por pais
           }
         }
       }
