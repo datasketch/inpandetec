@@ -40,8 +40,8 @@ ui <-
                              uiOutput("click_ui"),
                              div(style = "margin-top:3%;",
                                  actionButton("modal_info", "Testimonios", icon = icon("user"))
-                             )
-                             #verbatimTextOutput("test")
+                             ),
+                             highchartOutput("click_treemap")
                          )
                     )
                 )
@@ -194,7 +194,7 @@ server <-
         v <- "Frecuencia"
         if (!is.null(input$freqId)) {
           if (length(unique(input$freqId)) > 1) {
-            if (length(unique(input$typeId)) > 1) v <- c( "Tipo de violencia experimentada", v)
+            if (length(unique(input$typeId)) > 1 | is.null(input$typeId)) v <- c( "Tipo de violencia experimentada", v)
           } else {
             v <- "Tipo de violencia experimentada"
             if (length(unique(input$typeId)) == 1) v <- "País"  #comparacion por pais
@@ -206,7 +206,7 @@ server <-
         inpandetec::var_selection(df, v) |>
         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
 
-     if (ncol(df) == 3) {
+      if (ncol(df) == 3) {
         available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE", "#dddddd") #
         dic_col <- data.frame(tipo = unique(data_to_app$`Tipo de violencia experimentada`), ...colors = available_colors)
         df <- df |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "tipo"))
@@ -388,6 +388,7 @@ server <-
     click_filter <- reactive({
       if (is.null(id_click_viz$id)) return()
       dv <- d_viz()
+      if (nrow(dv) == 0) return()
       df <- d_filter()
       dc <- NULL
       if ("País" %in% names(dv)) {
@@ -399,10 +400,10 @@ server <-
       if ("Tipo de violencia experimentada" %in% names(dv)) {
         if (!is.null(id_click_viz$cat)) {
           dc <- dc |>
-            dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$cat)
+            dplyr::filter(`Tipo de violencia experimentada` %in% gsub("<br/>", " ",id_click_viz$cat))
         } else {
           dc <- df |>
-            dplyr::filter(`Tipo de violencia experimentada` %in% id_click_viz$id)
+            dplyr::filter(`Tipo de violencia experimentada` %in% gsub("<br/>", " ",id_click_viz$id))
         }
       }
       if ("Identidad de género" %in% names(dv)) {
@@ -416,42 +417,103 @@ server <-
 
     output$viz_click <- highcharter::renderHighchart({
       tryCatch({
-      if (is.null(id_click_viz$id)) return()
-      if (is.null(click_filter())) return()
-      if (nrow(click_filter()) == 0) return()
-      tx <- "Ejemplos de violencias experimentadas por acoso y hostigamiento"
+        if (is.null(id_click_viz$id)) return()
+        if (is.null(click_filter())) return()
+        if (nrow(click_filter()) == 0) return()
 
-      if (is.null(input$typeId) |
-          length(input$typeId) == length(unique(data_to_app$`Tipo de violencia experimentada`))) {
-        tx <- "Tipos de violencias experimentadas por acoso y hostigamiento"
-        dc <- click_filter() |> dplyr::select(`Tipo de violencia experimentada`)
-        dc <-  inpandetec::var_selection(dc, `Tipo de violencia experimentada`) |>
-          inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
-        available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
-        dic_col <- data.frame(ejemplo = unique(dc$`Tipo de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Tipo de violencia experimentada`)))])
-        dc <- dc |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "ejemplo"))
-      } else {
-      dc <- click_filter() |> tidyr::separate_rows(`Ejemplos de violencia experimentada`, sep = "-")
-      dc <-  inpandetec::var_selection(dc, `Ejemplos de violencia experimentada`) |>
-        inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
-      available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
-      dic_col <- data.frame(ejemplo = unique(dc$`Ejemplos de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Ejemplos de violencia experimentada`)))])
-      dc <- dc |> dplyr::left_join(dic_col, by = c("Ejemplos de violencia experimentada" = "ejemplo"))
-      }
-      suppressWarnings(
-        hgchmagic::hgch_pie_CatNum(dc,
-                                   background_color = "#ffffff",
-                                   legend_show = FALSE,
-                                   #palette_colors = c("#5151f2", "#00afff ", "#4ad3ac", "#ffd150", "#ffe0bb", "#f26330", "#163875"),
-                                   color_by = names(dc)[1],
-                                   title = tx,
-                                   title_size = 13,
-                                   title_family = "Raleway",
-                                   text_family  = "Mulish",
-                                   title_align = "center") |>
-          hc_tooltip(style = list(
-            width = "150px"))
-      )
+        dc <- click_filter() |> tidyr::separate_rows(`Ejemplos de violencia experimentada`, sep = "-")
+        if (length(unique(dc$`Ejemplos de violencia experimentada`)) > 11) {
+          tx <- "Tipos de violencias experimentadas"
+          dv <- d_viz()
+          if ("País" %in% names(dv)) {
+            tx <- paste0(tx, " en ", id_click_viz$id)
+          }
+          if ("Frecuencia" %in% names(dv)) {
+            tx <-  paste0(tx, "<br/>(frecuencia: ", id_click_viz$id, ")")
+          }
+          if ("Tipo de violencia experimentada" %in% names(dv)) {
+            if (!is.null(id_click_viz$cat)) {
+              tx <-  paste0(tx, "<br/>(Tipo de violencia experimentada: ", id_click_viz$cat, ")")
+            } else {
+              tx <-  paste0(tx, "<br/>(Tipo de violencia experimentada: ", id_click_viz$id, ")")
+            }
+          }
+          if ("Identidad de género" %in% names(dv)) {
+            tx <-  paste0(tx, "<br/>(Identidad de género ", id_click_viz$id, ")")
+          }
+          dc <- click_filter() |> dplyr::select(`Tipo de violencia experimentada`)
+          dc <-  inpandetec::var_selection(dc, `Tipo de violencia experimentada`) |>
+            inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+          available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+          dic_col <- data.frame(ejemplo = unique(dc$`Tipo de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Tipo de violencia experimentada`)))])
+          dc <- dc |> dplyr::left_join(dic_col, by = c("Tipo de violencia experimentada" = "ejemplo"))
+          myFunc <- paste0("function(event) {Shiny.onInputChange('", 'hcClickedTree', "', {id:event.point.name, timestamp: new Date().getTime()});}")
+
+          viz <-
+            suppressWarnings(
+              hgchmagic::hgch_treemap_CatNum(dc,
+                                         background_color = "#ffffff",
+                                         legend_show = FALSE,
+                                         #palette_colors = c("#5151f2", "#00afff ", "#4ad3ac", "#ffd150", "#ffe0bb", "#f26330", "#163875"),
+                                         color_by = names(dc)[1],
+                                         caption = "Da click para ver ejemplos según tipo de violencia",
+                                         title = tx,
+                                         plot_margin_bottom  = 50,
+                                         title_size = 13,
+                                         title_family = "Raleway",
+                                         text_family  = "Mulish",
+                                         cursor = "pointer",
+                                         clickFunction = htmlwidgets::JS(myFunc),
+                                         title_align = "center") |>
+                hc_tooltip(style = list(
+                  width = "150px"))
+            )
+        } else {
+          tv <- paste0(unique(dc$`Tipo de violencia experimentada`), collapse = " - ")
+            dc <-  inpandetec::var_selection(dc, `Ejemplos de violencia experimentada`) |>
+              inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+            available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+            dic_col <- data.frame(ejemplo = unique(dc$`Ejemplos de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Ejemplos de violencia experimentada`)))])
+            dc <- dc |> dplyr::left_join(dic_col, by = c("Ejemplos de violencia experimentada" = "ejemplo"))
+            tx <- "Ejemplos de violencias experimentadas"
+            dv <- d_viz()
+            if ("País" %in% names(dv)) {
+              tx <- paste0(tx, " en ", id_click_viz$id)
+              tx <- paste0(tx, " por ", tv)
+            }
+            if ("Frecuencia" %in% names(dv)) {
+              tx <-  paste0(tx, "<br/>(frecuencia: ", id_click_viz$id, ")")
+              tx <- paste0(tx, " por ", tv)
+            }
+            if ("Tipo de violencia experimentada" %in% names(dv)) {
+              if (!is.null(id_click_viz$cat)) {
+                tx <-  paste0(tx, "<br/>(Tipo de violencia experimentada: ", id_click_viz$cat, ")")
+              } else {
+                tx <-  paste0(tx, "<br/>(Tipo de violencia experimentada: ", id_click_viz$id, ")")
+              }
+            }
+            if ("Identidad de género" %in% names(dv)) {
+              tx <-  paste0(tx, "<br/>(Identidad de género ", id_click_viz$id, ")")
+              tx <- paste0(tx, " por ", tv)
+            }
+
+            viz <-
+              suppressWarnings(
+                hgchmagic::hgch_pie_CatNum(dc,
+                                           background_color = "#ffffff",
+                                           legend_show = FALSE,
+                                           #palette_colors = c("#5151f2", "#00afff ", "#4ad3ac", "#ffd150", "#ffe0bb", "#f26330", "#163875"),
+                                           color_by = names(dc)[1],
+                                           title = tx,
+                                           title_size = 13,
+                                           title_family = "Raleway",
+                                           text_family  = "Mulish",
+                                           title_align = "center") |>
+                  hc_tooltip(style = list(
+                    width = "150px"))
+              )
+          }
+        viz
       },
       error = function(e){
         return()
@@ -464,6 +526,33 @@ server <-
       if (is.null(click_filter())) return(tx)
       if (nrow(click_filter()) == 0) return("No hay información para los filtros seleccionados")
       highcharter::highchartOutput("viz_click", width = 300)
+    })
+
+
+    output$click_treemap <- renderHighchart({
+      if (is.null(click_filter())) return()
+      if (is.null(input$hcClickedTree)) return()
+
+      dc <-  click_filter() |> tidyr::separate_rows(`Ejemplos de violencia experimentada`, sep = "-")
+      if (length(unique(dc$`Ejemplos de violencia experimentada`)) < 11 ) return()
+      dc <- dc |> dplyr::filter(`Tipo de violencia experimentada` %in% gsub("<br/>", " ",input$hcClickedTree))
+      tv <- unique(dc$`Tipo de violencia experimentada`)
+      dc <-  inpandetec::var_selection(dc, `Ejemplos de violencia experimentada`) |>
+         inpandetec::var_aggregation(`Total respuestas` = dplyr::n())
+      available_colors <- c("#4BAEE1", "#EA524E", "#50C8AC", "#F4E62F", "#FF8000", "#5151F2", "#F7DBCB", "#F8A557", "#AEF0F9", "#908AFF", "#F4B3BE")
+      dic_col <- data.frame(ejemplo = unique(dc$`Ejemplos de violencia experimentada`), ...colors = available_colors[1:(length(unique(dc$`Ejemplos de violencia experimentada`)))])
+      dc <- dc |> dplyr::left_join(dic_col, by = c("Ejemplos de violencia experimentada" = "ejemplo"))
+      tx <- paste0("Ejemplos de violencias experimentadas por ", tv)
+      hgch_pie_CatNum(data = dc,
+                      background_color = "#ffffff",
+                      legend_show = FALSE,
+                      #palette_colors = c("#5151f2", "#00afff ", "#4ad3ac", "#ffd150", "#ffe0bb", "#f26330", "#163875"),
+                      color_by = names(dc)[1],
+                      title = tx,
+                      title_size = 13,
+                      title_family = "Raleway",
+                      text_family  = "Mulish",
+                      title_align = "center")
     })
 
 

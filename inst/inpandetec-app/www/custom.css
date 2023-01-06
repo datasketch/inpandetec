@@ -5,6 +5,9 @@ html, body {
   color: #27181F !important;
 }
 
+.shiny-output-error { visibility: hidden !important; }
+.shiny-output-error:before { visibility: hidden !important; }
+
 .layout-container {
     display: flex;
     flex-direction: column;
