@@ -10,7 +10,8 @@ library(dsmodules)
 ui <-
   fluidPage(
     tags$head(
-      tags$link(rel="stylesheet", type="text/css", href="custom.css")
+      tags$link(rel="stylesheet", type="text/css", href="custom.css"),
+      includeScript("www/iframeSizer.contentWindow.min.js"),
     ),
     div(class = "layout-container",
         div(class = "layout-panels",
